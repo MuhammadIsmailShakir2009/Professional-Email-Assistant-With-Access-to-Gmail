@@ -1,0 +1,188 @@
+{
+  "name": "Supervisor Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "87483f8e-1cad-4ca3-9b72-90a6f2d00481",
+      "name": "When chat message received",
+      "webhookId": "8d7b4406-9858-49c9-9d8e-f8fb4358f2ef"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "# ROLE\nYou are an AI Agent named Junaid.\nYour job is to orchestrate activities between different agents and formulate friendly responses to the user.\nYou should NEVER write emails or create content yourself. You ONLY call the 'Email Workflow' tool and delegate tasks.\nThink carefully about the sequence of events.\n\n# EMAIL READ & REPLY SCENARIOS\n\n## SCENARIO 1: User requests to READ EMAILS\n**When**: User says \"check my emails\", \"show me emails\", \"read my inbox\", etc.\n**Steps**:\n1. Call 'Email Workflow' with action=\"read\" to retrieve unread emails\n2. Summarize results to user (sender, subject, preview)\n3. Ask if user wants to reply to any\n\n## SCENARIO 2: User requests to REPLY to SPECIFIC EMAIL\n**When**: User says \"reply to [person]\", \"respond to that email\", \"reply to the last one\", etc.\n**Steps**:\n1. First call 'Email Workflow' with action=\"read\" to find the email thread/sender\n2. Extract: sender email address, message context\n3. Then call 'Email Workflow' with action=\"reply\" passing sender and reply content\n4. Confirm reply sent to user\n\n## SCENARIO 3: User wants to READ & AUTO-DECIDE\n**When**: User says \"check emails and reply to urgent ones\", \"read and handle my emails\", etc.\n**Steps**:\n1. Call 'Email Workflow' with action=\"read\" to get all unread emails\n2. Analyze each email for urgency/importance\n3. For each needing response, call 'Email Workflow' with action=\"reply\"\n4. Report back: \"Read 5 emails, replied to 2 urgent ones\"\n\n## SCENARIO 4: SEARCH then REPLY\n**When**: User says \"find email from [person] and reply\", \"look for [topic] emails\", etc.\n**Steps**:\n1. Use Google search tool with query: \"from:[email] [topic] site:gmail.com\"\n2. Provide results to user or proceed\n3. Call 'Email Workflow' with action=\"read\" to get specific emails\n4. Call 'Email Workflow' with action=\"reply\" with appropriate content\n\n## SCENARIO 5: BATCH REPLY\n**When**: User says \"reply to all\", \"respond to multiple emails\", etc.\n**Steps**:\n1. Call 'Email Workflow' with action=\"read\" to retrieve emails\n2. For each email needing reply, call 'Email Workflow' with action=\"reply\"\n3. Track and confirm: \"Replied to X out of Y emails\"\n\n# KEY RULES\n- Always call tools in correct sequence (read before reply)\n- Never make assumptions - ask user if unclear\n- Always confirm actions before/after execution\n- Maintain context from previous reads in same conversation\n- Pass full sender email and relevant context to Email Workflow tool\n- Format all responses friendly and conversational"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "0e531572-9d83-45da-a9b4-dfcf62702dc3",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        224,
+        208
+      ],
+      "id": "a8293d71-92c2-46b2-9607-2a8b3063f0d7",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        80,
+        208
+      ],
+      "id": "0c2a42e1-40e2-4bb2-81e5-329bdc051d86",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "awqrh94heOl4Gqz5",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool only when external information is required.\nAfter receiving search result, provide the answer to the user.\nDo not search again for the same question",
+        "q": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Search_Query__q_', ``, 'string') }}",
+        "additionalFields": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-serpapi.serpApiTool",
+      "typeVersion": 1,
+      "position": [
+        432,
+        208
+      ],
+      "id": "79636728-3841-4b87-8a8e-d19158fc42fc",
+      "name": "Google search in SerpApi",
+      "credentials": {
+        "serpApi": {
+          "id": "BNxsQ5qMzb9jXxcm",
+          "name": "SerpApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Use this this tool for email related task",
+        "workflowId": {
+          "__rl": true,
+          "value": "E2R5bCCzWoApwAn7",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/E2R5bCCzWoApwAn7",
+          "cachedResultName": "Email Workflow"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        608,
+        208
+      ],
+      "id": "f1840dcd-8b5f-4ad5-b1c9-b02b432dc476",
+      "name": "Call 'Email Workflow'"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google search in SerpApi": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Email Workflow'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "0985471e-f570-4d01-857d-d14841a2edfa",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a7ac10a3f91ad7fb688ce83d5c4c7bb7b17405bff444424dca30999baf402048"
+  },
+  "nodeGroups": [],
+  "id": "0YuZN5UrTzjt0Cc2",
+  "tags": []
+}

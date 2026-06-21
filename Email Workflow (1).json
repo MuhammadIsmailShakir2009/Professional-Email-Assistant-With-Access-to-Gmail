@@ -1,0 +1,196 @@
+{
+  "name": "Email Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "options": {
+          "systemMessage": "You are a Gmail assistant.\n\nAvailable tools:\n- Send Email\n- Get Email\n- Reply Email\n\nRules:\n- Determine the user's email intent.\n- Use the appropriate tool.\n- For sending emails, write a professional email when needed.\n- For reading emails, provide either the full email or a concise summary depending on the request.\n- For replying, generate an appropriate reply and send it.\n- Never invent email content that was not retrieved.\n- Be concise."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        352,
+        0
+      ],
+      "id": "1fd7b829-4d57-49ff-8db7-4f7705c7a48b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        224,
+        224
+      ],
+      "id": "d064dd69-39ad-4008-b827-0c6c86fedf74",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "awqrh94heOl4Gqz5",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        352,
+        224
+      ],
+      "id": "4d58dc15-115b-493c-a868-7faa9c9ff412",
+      "name": "Send a message in Gmail",
+      "webhookId": "9fffc84c-f47e-4cea-8618-f32c3ea3d639",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gf62BKh1b74xOl9B",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough",
+        "returnOutput": "allRuns"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "7d0a4131-e82a-4c4f-8b9f-b152bcd2a2bd",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message_ID', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        224
+      ],
+      "id": "13530804-05db-4be0-a73b-f12934d36879",
+      "name": "Reply to a message in Gmail",
+      "webhookId": "53d3b9d8-b86f-40f7-baa0-b8bac20471c1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gf62BKh1b74xOl9B",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 1,
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        608,
+        224
+      ],
+      "id": "05c1e284-fa5f-41a3-9d69-ceb395c4bdaa",
+      "name": "Get many messages in Gmail",
+      "webhookId": "e981dea4-1f11-4477-af05-d3fa3f8e9f28",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gf62BKh1b74xOl9B",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply to a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "5028fe22-5000-47fe-a69b-81eb9aa98846",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a7ac10a3f91ad7fb688ce83d5c4c7bb7b17405bff444424dca30999baf402048"
+  },
+  "nodeGroups": [],
+  "id": "E2R5bCCzWoApwAn7",
+  "tags": []
+}
